@@ -1,0 +1,23 @@
+<project name="P2" default="run" basedir=".">
+    <!-- Propiedades del proyecto -->
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+
+    <!-- Limpiar el directorio de compilación -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <!-- Compilar el código fuente -->
+    <target name="compile" depends="clean">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}"/>
+    </target>
+
+    <!-- Ejecutar el analizador léxico -->
+    <target name="run" depends="compile">
+        <java classname="main.jflex.Lexer" classpath="${build.dir}">
+            <arg value="tst/prueba.txt"/>
+        </java>
+    </target>
+</project>
