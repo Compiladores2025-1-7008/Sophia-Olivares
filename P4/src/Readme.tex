@@ -1,0 +1,131 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{hyperref}
+
+\title{Practica 4\\Gramática para Analizador Sintáctico}
+\author{Sarah Sophia Olivares García}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{1. Conjuntos N, $\Sigma$, y símbolo inicial S}
+
+Dada la gramática:
+\[
+\[
+\begin{align*}
+P = \{ & S \rightarrow \text{Expr} \ | \ \text{Asig}, \\
+       & \text{Expr} \rightarrow \text{Term Expr}', \\
+       & \text{Expr}' \rightarrow + \text{Term Expr}' \ | \ - \text{Term Expr}' \ | \ \varepsilon, \\
+       & \text{Term} \rightarrow \text{Factor Term}', \\
+       & \text{Term}' \rightarrow * \text{Factor Term}' \ | \ / \text{Factor Term}' \ | \ \varepsilon, \\
+       & \text{Factor} \rightarrow \text{Num} \ | \ \text{Var} \ | \ (\text{Expr}) \ | \ -\text{Expr}, \\
+       & \text{Num} \rightarrow \text{Entero Decimal}, \\
+       & \text{Decimal} \rightarrow . \text{Entero} \ | \ \varepsilon, \\
+       & \text{Entero} \rightarrow \text{Digito} \ | \ \text{Digito Entero}, \\
+       & \text{Digito} \rightarrow 0 \ | \ 1 \ | \ldots \ | \ 9, \\
+       & \text{Asig} \rightarrow \text{var Var = Expr}, \\
+       & \text{Var} \rightarrow \text{Letra Pos}, \\
+       & \text{Pos} \rightarrow \text{Var} \ | \ \varepsilon, \\
+       & \text{Letra} \rightarrow \_ \ | \ a \ | \ b \ | \ldots \ | \ z \ | \ A \ | \ B \ | \ldots \ | \ Z
+\}
+\end{align*}
+\]
+
+\begin{itemize}
+    \item $N$: \{S, Expr, Expr', Term, Term', Factor, Num, Decimal, Entero, Digito, Asig, Var, Pos, Letra\}
+    \item $\Sigma$: \{+, -, *, /, (, ), ., var, =, \_, a-z, A-Z, 0-9\}
+    \item Símbolo inicial: $S$
+\end{itemize}
+
+\section*{2. Eliminación de ambigüedad}
+
+La gramática original presenta ambigüedad en la expresión ``Expr $\rightarrow$ Term Expr'``, ya que podría generar conflictos en la interpretación de operadores. Para eliminar la ambigüedad, utilizamos una jerarquía de operadores con precedencia y asociatividad definida:
+
+\begin{itemize}
+    \item Operadores de suma y resta tienen menor precedencia que los de multiplicación y división.
+    \item La exponenciación es asociativa por la derecha.
+\end{itemize}
+
+Esto se puede manejar mediante reglas de precedencia en BYACC/J.
+
+\section*{3. Eliminación de recursividad izquierda}
+
+La regla $\text{Expr} \rightarrow \text{Term Expr}'$ no presenta recursividad izquierda directa o indirecta. Por tanto, no es necesario realizar modificaciones.
+
+\section*{4. Factorización izquierda}
+
+No se observa factor común entre las producciones. Por lo tanto, no se requiere factorización izquierda.
+
+\section*{5. Nuevos conjuntos N y P}
+
+Los conjuntos $N$ y $P$ permanecen iguales debido a que no hubo necesidad de eliminar recursividad o realizar factorizaciones.
+
+\section*{6. Manejo de conflictos Shift/Reduce}
+
+Los conflictos de shift/reduce se resolverán utilizando las declaraciones de precedencia y asociatividad en BYACC/J.
+
+\section*{7. Definición en BYACC/J}
+
+El archivo resultante en BYACC/J es el siguiente:
+
+\begin{verbatim}
+%{
+  import java.lang.Math;
+  import java.io.*;
+%}
+
+%token NUM VAR
+%left '+' '-'
+%left '*' '/'
+%right '^'
+
+%%
+
+input: /* empty */
+    | input line
+;
+
+line: '\n'
+    | expr '\n' { System.out.println("Resultado: " + $1); }
+;
+
+expr: term
+    | expr '+' term { $$ = $1 + $3; }
+    | expr '-' term { $$ = $1 - $3; }
+;
+
+term: factor
+    | term '*' factor { $$ = $1 * $3; }
+    | term '/' factor { $$ = $1 / $3; }
+;
+
+factor: NUM
+      | VAR
+      | '(' expr ')' { $$ = $2; }
+      | '-' factor %prec '-' { $$ = -$2; }
+;
+
+%%
+\end{verbatim}
+
+\section*{8. Ejemplo de entrada y salida}
+
+Archivo de prueba (\texttt{prueba.txt}):
+\begin{verbatim}
+3 + 5
+(2 * 6) - 4
+\end{verbatim}
+
+Salida esperada:
+\begin{verbatim}
+Resultado: 8
+Resultado: 8
+\end{verbatim}
+
+\end{document}
+
