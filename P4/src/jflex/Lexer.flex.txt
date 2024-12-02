@@ -1,0 +1,43 @@
+package main.jflex;
+
+import main.byacc.Parser;
+import main.byacc.ParserVal;
+import java.io.Reader;
+
+%%
+
+%{
+private Parser yyparser;
+
+public Lexer(Reader r, Parser yyparser) {
+       this(r);
+       this.yyparser = yyparser;
+}
+
+public int getLine() { return yyline; }
+%}
+
+%public
+%class Lexer
+%standalone
+%unicode
+%line
+
+espacio=[ \t]
+entero=[0-9]+
+identificador=[a-zA-Z_][a-zA-Z0-9_]*
+
+%%
+
+{espacio}+ { } // Ignorar espacios y tabulaciones
+"int"      { return Parser.INT; }
+"float"    { return Parser.FLOAT; }
+{identificador} { yyparser.setYylval(new ParserVal(yytext())); return Parser.ID; }
+{entero}   { yyparser.setYylval(new ParserVal(Double.parseDouble(yytext()))); return Parser.NUM; }
+"="        { return Parser.ASSIGN; }
+"+"        { return Parser.PLUS; }
+","        { return Parser.COMMA; }
+";"        { return Parser.SEMICOLON; }
+"\n"       { return Parser.NL; }
+<<EOF>>    { return 0; }
+.          { return -1; }
